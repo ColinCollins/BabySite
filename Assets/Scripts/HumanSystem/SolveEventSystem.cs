@@ -2,22 +2,26 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SolveEventSystem{
+public class SolveEventSystem {
 
     private HumanSystem _person = null;
-    private float rayline = 50;
+    private float rayline = 3;
     public SolveEventSystem(HumanSystem person) {
         _person = person;
     }
 
     public void getEventCollision() {
         Vector2 targetPos = getTargetPosition();
-        RaycastHit2D hit = Physics2D.Linecast(_person.transform.position, targetPos, 1 << LayerMask.NameToLayer("Furniture"));
+        RaycastHit2D hit = Physics2D.Linecast(_person.transform.position, targetPos, 1 << LayerMask.NameToLayer("EventStuff"));
         if (hit) {
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                // Event solve
-                //var hit.collider.transform
+            if (Input.GetKeyDown(KeyCode.Space)) {
+                GameObject target = hit.collider.gameObject;
+                GrapStuff grap = target.GetComponent<GrapStuff>();
+                grap.CreateEventByName(_person);
+                _person.state = HumanState.isWorking;
+                if (EventControl.eventList == null || EventControl.eventList.Count <= 0) {
+                    _person.state = HumanState.isIdle;
+                }
             }
         }
     }
@@ -39,18 +43,12 @@ public class SolveEventSystem{
                 tarPos = new Vector2(pos.x, pos.y + rayline);
                 break;
             case Direction.Right:
-                tarPos = new Vector2(pos.x - rayline, pos.y);
+                tarPos = new Vector2(pos.x + rayline, pos.y);
                 break;
             case Direction.Down:
                 tarPos = new Vector2(pos.x, pos.y - rayline);
                 break;
         }
         return tarPos;
-    }
-
-
-    void OnDrawGizmos() {
-        Gizmos.color = Color.blue;
-        Gizmos.DrawLine(_person.transform.position, getTargetPosition());
     }
 }

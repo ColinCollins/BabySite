@@ -15,9 +15,8 @@ public class HumanAnimation{
     
     public void PlayAction() {
 
-        if (_person.state == HumanState.isIdle)
+        if (_person.state == HumanState.isIdle || _person.state == HumanState.isWorking)
         {
-            int info = animator.GetCurrentAnimatorStateInfo(0).GetHashCode();
             animator.ForceStateNormalizedTime(0);
             StopAllAnimation();
             return;
