@@ -18,20 +18,28 @@ public class GameManager : MonoBehaviour {
     private delegate void CallFunc();
     private CallFunc callback;
     private GameState _gameState = GameState.Start;
+	private TipsManager _tips;
 
-    public GameObject heartBar;
-    public GameObject patientBar;
+	public GameObject heartHandle;
+    public GameObject pressureHandle;
     public GameObject turnTable;
+	public GameObject gameOverPic;
+
+	public float maxPressureValue = 0;
+	public float maxHeartValue = 0;
     // turnTable children
     private GameObject pointer;
     private GameObject background;
 
     private static float _heartValue = 0;
-    private static float _patientValue = 0;
+    private static float _pressureValue = 0;
     private static float _curHeartValue = 0;
-    private static float _curPatientValue = 0;
+    private static float _curPressureValue = 0;
 
-    public GameState State {
+	private Image _pressureBarHandle;
+	private Image _heartHandle;
+
+	public GameState State {
         get{
             return _gameState;
         }
@@ -58,9 +66,13 @@ public class GameManager : MonoBehaviour {
                 background = tran.gameObject;
             }
         }
-    }
 
-    public static GameManager getInstance() {
+		_pressureBarHandle = pressureHandle.GetComponent<Image>();
+		_heartHandle = heartHandle.GetComponent<Image>();
+		_tips = TipsManager.getInstance();
+	}
+
+	public static GameManager getInstance() {
         if (_instance != null)
         {
             return _instance;
@@ -99,50 +111,51 @@ public class GameManager : MonoBehaviour {
         _heartValue = value;
     }
 
-    public void setPatientValue(float value) {
-        _patientValue = value;
+    public void setPressureValue(float value) {
+        _pressureValue = value;
     }
 
     public void SliderEffect() {
         if (_curHeartValue != _heartValue) {
-            Image heartHandle = heartBar.GetComponentInChildren<Image>();
             _curHeartValue = CaculateSliderValue(_curHeartValue, _heartValue);
-            heartHandle.fillAmount = _curHeartValue / 100.0f;
+			_heartHandle.fillAmount = _curHeartValue / maxHeartValue;
         }
-        if (_curPatientValue != _patientValue) {
-            
-            Image patientHandle = patientBar.GetComponentInChildren<Image>();
-            Debug.Log(patientHandle.gameObject.name);
-            _curPatientValue = CaculateSliderValue(_curPatientValue, _patientValue);
-            patientHandle.fillAmount = _curPatientValue / 50.0f;
+        if (_curPressureValue != _pressureValue) {
+            _curPressureValue = CaculateSliderValue(_curPressureValue, _pressureValue);
+			_pressureBarHandle.fillAmount = _curPressureValue / maxPressureValue;
+			//Debug.Log("fillAmount:" + _pressureBarHandle.fillAmount);
         }
     }
 
-    public void TurnGame(HumanSystem person)
+    public void TurnGame(HumanSystem player)
     {
-        if (person.isRotate)
-        {
-            pointer.transform.Rotate(Vector3.forward);
-            float z = Mathf.Abs(pointer.transform.rotation.z % 360);
-            if (Input.GetMouseButtonDown(0))
-            {
-                person.isRotate = false;  
-                if (z >= 0.9 || z <= 1)
-                {
-                    person.heart += 33;
-                    pointer.transform.eulerAngles =new Vector3(0, 0, UnityEngine.Random.Range(-1, 1));
-                }
-                turnTable.gameObject.transform.localPosition = new Vector3(99999, 0, 0);
-            }
-        }
-    }
+		pointer.transform.Rotate(Vector3.forward);
+		float z = Mathf.Abs(pointer.transform.rotation.z % 360);
+		if (Input.GetMouseButtonDown(0))
+		{
+			if (z >= 0.9 || z <= 1)
+			{
+				player.heart += 33;
+				pointer.transform.eulerAngles = new Vector3(0, 0, UnityEngine.Random.Range(-1, 1));
+				player.state = HumanState.isIdle;
+				_tips.setTips("妻子心情变好了");
+			}
+			turnTable.gameObject.transform.localPosition = new Vector3(99999, 0, 0);
+			player.isTurnGame = false;
+		}
+	}
+	public void startTurnGame (HumanSystem player) {
+		player.isTurnGame = true;
+		turnTable.transform.localPosition = new Vector3(-440, -255, 0);
+	}
 
-    public void GameStart() { 
+
+	public void GameStart() { 
         
     }
 
     public void GamePlay() { 
-     
+    
     }
     public void GamePause() {
         State = GameState.Pause;
@@ -153,15 +166,19 @@ public class GameManager : MonoBehaviour {
     }
     // set the GameOver logic
     public void GameOver() {
-        if (State == GameState.Over) {
-            SceneManager.LoadScene("endScene");
-        } 
+		if (State == GameState.Over && _heartValue == 100)
+		{
+			SceneManager.LoadScene("endScene");
+		}
+		else {
+			gameOverPic.SetActive(true);
+			Time.timeScale = 0;
+		}
     }
     // a slider effect
     private float CaculateSliderValue(float curValue, float MaxValue) {
-        var value = Time.deltaTime * 10;
-        curValue += value;
-        if (curValue >= MaxValue) {
+        curValue += Time.deltaTime * 10;
+		if (curValue >= MaxValue) {
             curValue = MaxValue;
         }
         return curValue;

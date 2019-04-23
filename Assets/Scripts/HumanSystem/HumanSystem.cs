@@ -2,43 +2,44 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+// 人物当前状态
 public enum HumanState { 
     isWalking,
     isSlowing, // keep the speed down
     isWorking,
     isIdle
 }
-
+// 手持状态
 public enum HandsState { 
     keepMilk,
     keepDiaper,
+	keepDirtyDiaper,
     none,
 }
 
 public class HumanSystem : MonoBehaviour {
-
     private MoveController _controller = null;
     private SolveEventSystem _seSystem = null;
     private HumanAnimation _animSystem = null;
     private GameManager _gameManager = null;
+	private HumanStuff _humanStuff = null;
     [HideInInspector]
     public bool isTurnGame = false;
-    public bool isRotate = false;
 
     #region Prototype
-    private float _patient = 0;
-    public float patient {
+    private float _pressure = 0;
+    public float pressure {
         get {
-            return _patient;
+            return _pressure;
         }
         set {
-            _patient = value;
-            if (_patient >= 50 && _gameManager != null) {
-                _patient = 50;
-                _gameManager.setPatientValue(_patient);
+            _pressure = value;
+            if (_pressure >= _gameManager.maxPressureValue && _gameManager != null) {
+                _pressure = _gameManager.maxPressureValue;
+                _gameManager.setPressureValue(_pressure);
                 _gameManager.State = GameState.Over;
             }
-            _gameManager.setPatientValue(_patient);
+            _gameManager.setPressureValue(_pressure);
         }
     }
     private float _heart = 0;
@@ -93,15 +94,16 @@ public class HumanSystem : MonoBehaviour {
             _hands = value;
         }
     }
-    #endregion
+	#endregion
 
 	// Use this for initialization
 	void Start () {
-        _controller = new MoveController(this);
+		_humanStuff = GetComponent<HumanStuff>();
+		_controller = new MoveController(this);
         _seSystem = new SolveEventSystem(this);
         _animSystem = new HumanAnimation(this);
         _gameManager = GameManager.getInstance();
-        Debug.Log(_gameManager);
+		Debug.Log(_gameManager);
 	}
 
 	// Update is called once per frame
@@ -113,13 +115,12 @@ public class HumanSystem : MonoBehaviour {
         _controller.WalkState();
         _animSystem.PlayAction();
         _seSystem.getEventCollision();
-
-        if (isTurnGame)
-        {
-            _gameManager.TurnGame(this);
-        }
-
+		if (isTurnGame)
+		{
+			_gameManager.TurnGame(this);
+		}
 	}
+
     // keep the sprite on common
     void OnTriggerEnter2D(Collider2D other)
     {
@@ -140,7 +141,10 @@ public class HumanSystem : MonoBehaviour {
         Gizmos.color = Color.blue;
         Gizmos.DrawLine(transform.position, getTargetPosition());
     }
-    // use to draw the line
+	// use to draw the line
+	public HumanStuff getStuffComp() {
+		return _humanStuff;
+	}
     public Vector2 getTargetPosition()
     {
         var rayline = 3;

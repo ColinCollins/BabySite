@@ -12,9 +12,9 @@ public enum Direction {
 public class MoveController{
     // use to controller the player move an
     private HumanSystem _person = null;
-    private float max_speed = 5;
+    private float max_speed = 10;
     private float cur_speed = 0f;
-    private float lerp_rate = 20;
+    private float lerp_rate = 50;
 
     public MoveController(HumanSystem person) {
         _person = person;
