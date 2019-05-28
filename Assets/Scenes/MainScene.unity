@@ -3468,7 +3468,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 2
-  pressureValue: 0
+  pressureValue: -10
   requireTime: 1
   isTool: 0
   isOrder: 0

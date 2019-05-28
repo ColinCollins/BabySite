@@ -177,7 +177,7 @@ public class GameManager : MonoBehaviour {
     }
     // a slider effect
     private float CaculateSliderValue(float curValue, float MaxValue) {
-        curValue += Time.deltaTime * 10;
+        curValue += Time.deltaTime * 10 * (MaxValue - curValue);
 		if (curValue >= MaxValue) {
             curValue = MaxValue;
         }
